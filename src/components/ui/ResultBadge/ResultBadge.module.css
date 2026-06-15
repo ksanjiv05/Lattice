@@ -1,0 +1,26 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-width: 2.5ch;
+  padding: 0.1rem 0.5rem;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.value {
+  background-color: rgba(100, 108, 255, 0.18);
+  color: #b8bcff;
+}
+
+.empty {
+  background-color: rgba(128, 128, 128, 0.15);
+  color: #888;
+}
+
+.error {
+  background-color: rgba(255, 86, 86, 0.18);
+  color: #ff8a8a;
+  cursor: help;
+}

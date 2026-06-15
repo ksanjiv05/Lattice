@@ -1,0 +1,39 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #16161a;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='light'] body {
+  background-color: #f4f4f6;
+  color: #1b1b1f;
+}
+
+a {
+  color: #646cff;
+  text-decoration: inherit;
+}

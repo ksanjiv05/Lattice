@@ -1,8 +1,10 @@
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
 /**
- * Join conditional class names. Falsy values are dropped.
- *
- *   cn('btn', isActive && 'btn--active', undefined) // => 'btn btn--active'
+ * Join conditional class names and resolve conflicting Tailwind utilities
+ * (later wins), e.g. cn('px-2', condition && 'px-4') => 'px-4'.
  */
-export function cn(...classes: Array<string | false | null | undefined>): string {
-  return classes.filter(Boolean).join(' ')
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs))
 }

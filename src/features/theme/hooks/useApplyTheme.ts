@@ -6,7 +6,8 @@ export function useApplyTheme() {
   const theme = useSettingsStore((s) => s.theme)
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    document.documentElement.style.colorScheme = theme
+    const root = document.documentElement
+    root.classList.toggle('dark', theme === 'dark')
+    root.style.colorScheme = theme
   }, [theme])
 }

@@ -1,8 +1,9 @@
 # o-simulation — architecture & conventions
 
 React 19 + TypeScript + Vite. State via Zustand with a swappable local-storage
-persistence layer. These rules are enforced for every change (by ESLint where
-possible, by review otherwise).
+persistence layer. Styling with Tailwind CSS v4 and icons from `lucide-react`.
+These rules are enforced for every change (by ESLint where possible, by review
+otherwise).
 
 ## Directory structure
 
@@ -39,8 +40,10 @@ src/
 3. **Small components.** Hard limits (ESLint `warn`): file ≤ 200 lines,
    function/component ≤ 80 lines, nesting depth ≤ 3. If you approach these,
    split the component or extract a hook. Aim well under the limits.
-4. **One component per file**, named the same as the file. Co-locate its
-   `.module.css`. Styles are scoped via CSS Modules — no global class soup.
+4. **One component per file**, named the same as the file. Style with Tailwind
+   utility classes; merge/condition them with `cn()` (`@/utils`, clsx +
+   tailwind-merge). Use `lucide-react` for icons. Dark mode is class-based
+   (`dark:` variants; the `dark` class is toggled on `<html>` by `useApplyTheme`).
 5. **Feature isolation.** A feature imports shared code (`@/components`,
    `@/store`, `@/utils`). Cross-feature imports go through the other feature's
    `index.ts` only — never reach into its internal files.

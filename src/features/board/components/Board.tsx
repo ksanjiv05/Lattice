@@ -1,5 +1,6 @@
 import {
   Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
   Panel,
@@ -9,15 +10,16 @@ import {
 import '@xyflow/react/dist/style.css'
 import { FormulaNode } from '@/features/nodes'
 import { DeletableEdge } from '@/features/connections'
+import { useSettingsStore } from '@/store'
 import { useFlowSync } from '../hooks/useFlowSync'
 import { AddNodeButton } from './AddNodeButton'
 import { FormulaBar } from './FormulaBar'
-import styles from './Board.module.css'
 
 const nodeTypes = { formula: FormulaNode }
 const edgeTypes = { deletable: DeletableEdge }
 
 function BoardCanvas() {
+  const theme = useSettingsStore((s) => s.theme)
   const {
     rfNodes,
     rfEdges,
@@ -25,7 +27,7 @@ function BoardCanvas() {
     onEdgesChange,
     onConnect,
     onNodeClick,
-    onNodeDragStart,
+    onNodeDragStop,
     onPaneClick,
   } = useFlowSync()
 
@@ -35,20 +37,22 @@ function BoardCanvas() {
       edges={rfEdges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
+      colorMode={theme}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
       onNodeClick={onNodeClick}
-      onNodeDragStart={onNodeDragStart}
+      onNodeDragStop={onNodeDragStop}
       onPaneClick={onPaneClick}
       selectNodesOnDrag={false}
       deleteKeyCode={['Delete', 'Backspace']}
       fitView
+      fitViewOptions={{ padding: 0.3 }}
       proOptions={{ hideAttribution: true }}
     >
-      <Background gap={20} />
-      <Controls />
-      <MiniMap pannable zoomable />
+      <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} />
+      <Controls showInteractive={false} className="overflow-hidden! rounded-lg! shadow-lg!" />
+      <MiniMap pannable zoomable className="overflow-hidden! rounded-lg!" />
       <Panel position="top-left">
         <AddNodeButton />
       </Panel>
@@ -59,9 +63,9 @@ function BoardCanvas() {
 /** The whiteboard, powered by React Flow: pan/zoom, draggable nodes, wiring. */
 export function Board() {
   return (
-    <div className={styles.board}>
+    <div className="flex h-full min-w-0 flex-1 flex-col">
       <FormulaBar />
-      <div className={styles.canvas}>
+      <div className="relative min-h-0 flex-1">
         <ReactFlowProvider>
           <BoardCanvas />
         </ReactFlowProvider>

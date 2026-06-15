@@ -8,6 +8,9 @@ interface SettingsState {
   theme: Theme
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
+  /** Whether the variables side panel is visible. */
+  variablesPanelOpen: boolean
+  toggleVariablesPanel: () => void
 }
 
 /**
@@ -21,6 +24,9 @@ export const useSettingsStore = create<SettingsState>()(
       setTheme: (theme) => set({ theme }),
       toggleTheme: () =>
         set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
+      variablesPanelOpen: true,
+      toggleVariablesPanel: () =>
+        set((state) => ({ variablesPanelOpen: !state.variablesPanelOpen })),
     }),
     { name: storeKey('settings'), storage: persistStorage },
   ),

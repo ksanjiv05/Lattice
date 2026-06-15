@@ -40,6 +40,8 @@ export function useFlowSync() {
         // Controlled selection — without this React Flow resets selection on
         // every node update (e.g. each keystroke), dropping the formula bar.
         selected: n.id === selectedId,
+        // The card is mostly `nodrag` inputs, so drag from the header handle.
+        dragHandle: '.node-drag-handle',
       })),
     [nodes, selectedId],
   )
@@ -77,10 +79,11 @@ export function useFlowSync() {
     [connectNodes],
   )
 
-  // Drive selection directly from interactions (single click / drag) so it
+  // Drive selection directly from interactions (single click / drag end) so it
   // never races with React Flow's internal selection under controlled `selected`.
+  // Selecting on drag *stop* (not start) avoids re-rendering mid-drag.
   const onNodeClick = useCallback<NodeMouseHandler>((_, node) => select(node.id), [select])
-  const onNodeDragStart = useCallback<OnNodeDrag>((_, node) => select(node.id), [select])
+  const onNodeDragStop = useCallback<OnNodeDrag>((_, node) => select(node.id), [select])
   const onPaneClick = useCallback(() => select(null), [select])
 
   return {
@@ -90,7 +93,7 @@ export function useFlowSync() {
     onEdgesChange,
     onConnect,
     onNodeClick,
-    onNodeDragStart,
+    onNodeDragStop,
     onPaneClick,
   }
 }

@@ -6,7 +6,7 @@ import {
   useReactFlow,
   type EdgeProps,
 } from '@xyflow/react'
-import styles from './DeletableEdge.module.css'
+import { X } from 'lucide-react'
 
 /**
  * Edge that reveals a delete button at its midpoint on hover or when selected.
@@ -42,19 +42,22 @@ export function DeletableEdge({
         id={id}
         path={edgePath}
         markerEnd={markerEnd}
-        style={{ stroke: active ? '#b8bcff' : '#646cff', strokeWidth: active ? 2.5 : 2 }}
+        style={{ stroke: active ? '#818cf8' : '#6366f1', strokeWidth: active ? 2.5 : 2 }}
       />
       {/* Invisible wide path to make the wire easy to hover/click. */}
       <path
         d={edgePath}
-        className={styles.interaction}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={20}
+        style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       />
       {active && (
         <EdgeLabelRenderer>
           <button
-            className={`nodrag nopan ${styles.deleteBtn}`}
+            className="nodrag nopan pointer-events-auto absolute flex size-5 items-center justify-center rounded-full border border-zinc-300 bg-white text-red-500 shadow-sm hover:bg-red-500/15 dark:border-zinc-600 dark:bg-zinc-800"
             style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
             aria-label="delete connection"
             onMouseEnter={() => setHovered(true)}
@@ -64,7 +67,7 @@ export function DeletableEdge({
               deleteElements({ edges: [{ id }] })
             }}
           >
-            ✕
+            <X className="size-3" />
           </button>
         </EdgeLabelRenderer>
       )}

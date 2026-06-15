@@ -1,11 +1,11 @@
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/utils'
 import { Input } from '../Input'
-import styles from './NumberInput.module.css'
 
 interface NumberInputProps {
   value: string
   onChange: (value: string) => void
-  /** Amount the ▲/▼ buttons add or subtract per click. */
+  /** Amount the steppers add or subtract per click. */
   step?: number
   /** When provided, an inline field lets the user edit the step factor. */
   onStepChange?: (step: number) => void
@@ -14,6 +14,9 @@ interface NumberInputProps {
 }
 
 const NUMERIC = /^-?\d*\.?\d+$/
+
+const stepBtn =
+  'flex w-6 flex-1 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-700 disabled:pointer-events-none disabled:opacity-30 dark:hover:bg-white/10 dark:hover:text-zinc-100'
 
 /**
  * A formula-capable text field with ▲/▼ steppers. The steppers add/subtract
@@ -37,43 +40,46 @@ export function NumberInput({
   }
 
   return (
-    <div className={cn(styles.wrap, className)}>
-      <div className={styles.main}>
+    <div className={cn('flex w-full items-center gap-1.5', className)}>
+      <div className="relative flex min-w-0 flex-1">
         <Input
           aria-label={ariaLabel}
-          className={styles.field}
+          className="pr-7"
           value={value}
           spellCheck={false}
           onChange={(e) => onChange(e.target.value)}
         />
-        <div className={styles.steppers}>
+        <div className="absolute inset-y-1 right-1 flex flex-col">
           <button
             type="button"
-            className={styles.step}
+            className={stepBtn}
             aria-label="increment"
             disabled={!numeric}
             onClick={() => stepBy(step)}
           >
-            ▲
+            <ChevronUp className="size-3" />
           </button>
           <button
             type="button"
-            className={styles.step}
+            className={stepBtn}
             aria-label="decrement"
             disabled={!numeric}
             onClick={() => stepBy(-step)}
           >
-            ▼
+            <ChevronDown className="size-3" />
           </button>
         </div>
       </div>
 
       {onStepChange && (
-        <label className={styles.stepFactor} title="Increment step / factor">
-          <span className={styles.stepLabel}>Δ</span>
+        <label
+          className="flex flex-none items-center gap-1 text-xs font-medium text-zinc-400"
+          title="Increment step / factor"
+        >
+          <span>Δ</span>
           <input
             type="number"
-            className={styles.stepInput}
+            className="h-9 w-14 rounded-lg border border-zinc-300 bg-white px-2 text-xs text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-white/10 dark:bg-zinc-950/40 dark:text-zinc-100"
             aria-label="step factor"
             value={step}
             min={0}

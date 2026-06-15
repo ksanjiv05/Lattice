@@ -1,4 +1,5 @@
 import { useReactFlow } from '@xyflow/react'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { useNodesStore } from '@/features/nodes'
 
@@ -15,5 +16,10 @@ export function AddNodeButton() {
     addNode(center.x - 90, center.y - 40)
   }
 
-  return <Button onClick={handleAdd}>+ Node</Button>
+  return (
+    <Button onClick={handleAdd} className="shadow-md">
+      <Plus className="size-4" />
+      Node
+    </Button>
+  )
 }

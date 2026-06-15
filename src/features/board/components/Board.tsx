@@ -9,13 +9,15 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { FormulaNode } from '@/features/nodes'
+import { MonitorNode } from '@/features/monitors'
 import { DeletableEdge } from '@/features/connections'
 import { useSettingsStore } from '@/store'
 import { useFlowSync } from '../hooks/useFlowSync'
 import { AddNodeButton } from './AddNodeButton'
+import { AddMonitorButton } from './AddMonitorButton'
 import { FormulaBar } from './FormulaBar'
 
-const nodeTypes = { formula: FormulaNode }
+const nodeTypes = { formula: FormulaNode, monitor: MonitorNode }
 const edgeTypes = { deletable: DeletableEdge }
 
 function BoardCanvas() {
@@ -54,7 +56,10 @@ function BoardCanvas() {
       <Controls showInteractive={false} className="overflow-hidden! rounded-lg! shadow-lg!" />
       <MiniMap pannable zoomable className="overflow-hidden! rounded-lg!" />
       <Panel position="top-left">
-        <AddNodeButton />
+        <div className="flex gap-2">
+          <AddNodeButton />
+          <AddMonitorButton />
+        </div>
       </Panel>
     </ReactFlow>
   )

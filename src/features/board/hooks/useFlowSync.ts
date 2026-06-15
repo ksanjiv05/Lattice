@@ -9,11 +9,22 @@ import type {
   OnNodesChange,
 } from '@xyflow/react'
 import { useNodesStore } from '@/features/nodes'
+import { useMonitorsStore } from '@/features/monitors'
 import { useConnectionsStore, useConnectNodes } from '@/features/connections'
 
 // Node visuals come from the store via `id`, so RF node data stays empty.
 // A shared frozen object keeps its reference stable across renders.
 const EMPTY_DATA = Object.freeze({})
+
+const rfNode = (id: string, type: string, x: number, y: number, selected: boolean): Node => ({
+  id,
+  type,
+  position: { x, y },
+  data: EMPTY_DATA,
+  selected,
+  // Cards are mostly `nodrag` inputs, so drag from the header handle.
+  dragHandle: '.node-drag-handle',
+})
 
 /**
  * Bridges the zustand stores (source of truth) to React Flow's controlled
@@ -26,25 +37,24 @@ export function useFlowSync() {
   const setNodePosition = useNodesStore((s) => s.setNodePosition)
   const removeNode = useNodesStore((s) => s.removeNode)
   const select = useNodesStore((s) => s.select)
+  const monitors = useMonitorsStore((s) => s.monitors)
+  const setMonitorPosition = useMonitorsStore((s) => s.setMonitorPosition)
+  const removeMonitor = useMonitorsStore((s) => s.removeMonitor)
   const connections = useConnectionsStore((s) => s.connections)
   const removeConnection = useConnectionsStore((s) => s.removeConnection)
   const connectNodes = useConnectNodes()
 
+  // Controlled selection — without `selected`, React Flow resets it on every
+  // node update (e.g. each keystroke), dropping the formula bar.
   const rfNodes = useMemo<Node[]>(
-    () =>
-      nodes.map((n) => ({
-        id: n.id,
-        type: 'formula',
-        position: { x: n.x, y: n.y },
-        data: EMPTY_DATA,
-        // Controlled selection — without this React Flow resets selection on
-        // every node update (e.g. each keystroke), dropping the formula bar.
-        selected: n.id === selectedId,
-        // The card is mostly `nodrag` inputs, so drag from the header handle.
-        dragHandle: '.node-drag-handle',
-      })),
-    [nodes, selectedId],
+    () => [
+      ...nodes.map((n) => rfNode(n.id, 'formula', n.x, n.y, n.id === selectedId)),
+      ...monitors.map((m) => rfNode(m.id, 'monitor', m.x, m.y, m.id === selectedId)),
+    ],
+    [nodes, monitors, selectedId],
   )
+
+  const monitorIds = useMemo(() => new Set(monitors.map((m) => m.id)), [monitors])
 
   const rfEdges = useMemo<Edge[]>(
     () =>
@@ -56,13 +66,15 @@ export function useFlowSync() {
     (changes) => {
       for (const change of changes) {
         if (change.type === 'position' && change.position) {
-          setNodePosition(change.id, change.position.x, change.position.y)
+          const move = monitorIds.has(change.id) ? setMonitorPosition : setNodePosition
+          move(change.id, change.position.x, change.position.y)
         } else if (change.type === 'remove') {
-          removeNode(change.id)
+          if (monitorIds.has(change.id)) removeMonitor(change.id)
+          else removeNode(change.id)
         }
       }
     },
-    [setNodePosition, removeNode],
+    [monitorIds, setMonitorPosition, setNodePosition, removeMonitor, removeNode],
   )
 
   const onEdgesChange = useCallback<OnEdgesChange>(

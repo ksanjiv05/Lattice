@@ -91,6 +91,11 @@ view: `Board` maps stores → RF `nodes`/`edges` and writes RF changes
   editing doesn't drag the node. Position/name/expression live in `nodes.store`.
 - **Variables** (`features/variables`) — named formulas in the side panel, not
   placed on the canvas.
+- **Groups** (`features/groups`) — dashed-border container nodes that wrap child
+  nodes (membership via `node.groupId`, set by dropping a node inside). A group
+  is referenceable like a node: its value mirrors its **last** child, and a wire
+  into the group feeds its **first** child as extra `inN` inputs. Dragging a
+  group moves its members. The model wiring lives in `engine/buildModel.ts`.
 - **Connections** (`features/connections`) — edges as data (`sourceId →
   targetId`) in `connections.store`. Drag from a node's right handle to another
   node to connect; select a wire and press Delete to remove it. The Nth incoming

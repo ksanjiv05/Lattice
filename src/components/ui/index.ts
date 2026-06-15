@@ -1,5 +1,6 @@
 export { Button } from './Button'
 export { Card } from './Card'
+export { ErrorBoundary } from './ErrorBoundary'
 export { Input } from './Input'
 export { NumberInput } from './NumberInput'
 export { ResultBadge } from './ResultBadge'

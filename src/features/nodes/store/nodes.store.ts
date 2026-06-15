@@ -16,6 +16,12 @@ interface NodesState {
   setNodePosition: (id: string, x: number, y: number) => void
   removeNode: (id: string) => void
   select: (id: string | null) => void
+  /** Assign (or clear) a node's group membership. */
+  setNodeGroup: (id: string, groupId: string | null) => void
+  /** Shift every member of a group by a delta (used when the group is dragged). */
+  moveMembersBy: (groupId: string, dx: number, dy: number) => void
+  /** Detach all members of a group (used when the group is deleted). */
+  ungroup: (groupId: string) => void
 }
 
 export const useNodesStore = create<NodesState>()(
@@ -34,6 +40,7 @@ export const useNodesStore = create<NodesState>()(
             expression: '0',
             x,
             y,
+            groupId: null,
           }
           return { nodes: [...s.nodes, node], seq, selectedId: node.id }
         }),
@@ -51,6 +58,18 @@ export const useNodesStore = create<NodesState>()(
           selectedId: s.selectedId === id ? null : s.selectedId,
         })),
       select: (id) => set({ selectedId: id }),
+      setNodeGroup: (id, groupId) =>
+        set((s) => ({ nodes: s.nodes.map((n) => (n.id === id ? { ...n, groupId } : n)) })),
+      moveMembersBy: (groupId, dx, dy) =>
+        set((s) => ({
+          nodes: s.nodes.map((n) =>
+            n.groupId === groupId ? { ...n, x: n.x + dx, y: n.y + dy } : n,
+          ),
+        })),
+      ungroup: (groupId) =>
+        set((s) => ({
+          nodes: s.nodes.map((n) => (n.groupId === groupId ? { ...n, groupId: null } : n)),
+        })),
     }),
     {
       name: storeKey('nodes'),

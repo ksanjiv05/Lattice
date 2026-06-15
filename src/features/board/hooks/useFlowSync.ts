@@ -8,73 +8,152 @@ import type {
   OnNodeDrag,
   OnNodesChange,
 } from '@xyflow/react'
-import { useNodesStore } from '@/features/nodes'
-import { useMonitorsStore } from '@/features/monitors'
+import { useNodesStore, type NodeModel } from '@/features/nodes'
+import { useMonitorsStore, type MonitorModel } from '@/features/monitors'
+import { useGroupsStore, type GroupModel } from '@/features/groups'
 import { useConnectionsStore, useConnectNodes } from '@/features/connections'
 
 // Node visuals come from the store via `id`, so RF node data stays empty.
-// A shared frozen object keeps its reference stable across renders.
 const EMPTY_DATA = Object.freeze({})
+const APPROX_NODE = { w: 208, h: 120 }
 
-const rfNode = (id: string, type: string, x: number, y: number, selected: boolean): Node => ({
-  id,
-  type,
-  position: { x, y },
-  data: EMPTY_DATA,
-  selected,
-  // Cards are mostly `nodrag` inputs, so drag from the header handle.
-  dragHandle: '.node-drag-handle',
-})
+/** Map the stores into React Flow nodes (groups render behind everything). */
+function buildRfNodes(
+  groups: GroupModel[],
+  nodes: NodeModel[],
+  monitors: MonitorModel[],
+  selectedId: string | null,
+): Node[] {
+  const groupNodes: Node[] = groups.map((g) => ({
+    id: g.id,
+    type: 'container',
+    position: { x: g.x, y: g.y },
+    style: { width: g.width, height: g.height },
+    data: EMPTY_DATA,
+    selected: g.id === selectedId,
+    zIndex: 0,
+  }))
+  const make = (id: string, type: string, x: number, y: number): Node => ({
+    id,
+    type,
+    position: { x, y },
+    data: EMPTY_DATA,
+    selected: id === selectedId,
+    dragHandle: '.node-drag-handle',
+    zIndex: 1,
+  })
+  return [
+    ...groupNodes,
+    ...nodes.map((n) => make(n.id, 'formula', n.x, n.y)),
+    ...monitors.map((m) => make(m.id, 'monitor', m.x, m.y)),
+  ]
+}
+
+/** Routes React Flow node changes (move/resize/remove) + drop-to-group to the
+ * correct store, keeping the group/monitor/node concerns out of `useFlowSync`. */
+function useNodeChanges() {
+  const setNodePosition = useNodesStore((s) => s.setNodePosition)
+  const removeNode = useNodesStore((s) => s.removeNode)
+  const select = useNodesStore((s) => s.select)
+  const setNodeGroup = useNodesStore((s) => s.setNodeGroup)
+  const moveMembersBy = useNodesStore((s) => s.moveMembersBy)
+  const ungroup = useNodesStore((s) => s.ungroup)
+  const monitors = useMonitorsStore((s) => s.monitors)
+  const setMonitorPosition = useMonitorsStore((s) => s.setMonitorPosition)
+  const removeMonitor = useMonitorsStore((s) => s.removeMonitor)
+  const groups = useGroupsStore((s) => s.groups)
+  const setGroupPosition = useGroupsStore((s) => s.setGroupPosition)
+  const removeGroup = useGroupsStore((s) => s.removeGroup)
+
+  const groupById = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups])
+  const monitorIds = useMemo(() => new Set(monitors.map((m) => m.id)), [monitors])
+
+  const moveById = useCallback(
+    (id: string, pos: { x: number; y: number }) => {
+      const group = groupById.get(id)
+      if (group) {
+        setGroupPosition(id, pos.x, pos.y)
+        moveMembersBy(id, pos.x - group.x, pos.y - group.y)
+      } else if (monitorIds.has(id)) {
+        setMonitorPosition(id, pos.x, pos.y)
+      } else {
+        setNodePosition(id, pos.x, pos.y)
+      }
+    },
+    [groupById, monitorIds, setGroupPosition, moveMembersBy, setMonitorPosition, setNodePosition],
+  )
+
+  const removeById = useCallback(
+    (id: string) => {
+      if (groupById.has(id)) {
+        ungroup(id)
+        removeGroup(id)
+      } else if (monitorIds.has(id)) {
+        removeMonitor(id)
+      } else {
+        removeNode(id)
+      }
+    },
+    [groupById, monitorIds, ungroup, removeGroup, removeMonitor, removeNode],
+  )
+
+  // NOTE: 'dimensions' changes are intentionally ignored. React Flow emits them
+  // on every measurement; reacting with setGroupSize would loop. Group resizing
+  // is handled by the NodeResizeControl's onResize callback instead.
+  const onNodesChange = useCallback<OnNodesChange>(
+    (changes) => {
+      for (const change of changes) {
+        if (change.type === 'position' && change.position) {
+          moveById(change.id, change.position)
+        } else if (change.type === 'remove') {
+          removeById(change.id)
+        }
+      }
+    },
+    [moveById, removeById],
+  )
+
+  // On drop: select, and join/leave a group based on the node's center.
+  const onNodeDragStop = useCallback<OnNodeDrag>(
+    (_, node) => {
+      select(node.id)
+      if (node.type !== 'formula') return
+      const cx = node.position.x + (node.measured?.width ?? APPROX_NODE.w) / 2
+      const cy = node.position.y + (node.measured?.height ?? APPROX_NODE.h) / 2
+      const container = groups.find(
+        (g) => cx >= g.x && cx <= g.x + g.width && cy >= g.y && cy <= g.y + g.height,
+      )
+      setNodeGroup(node.id, container?.id ?? null)
+    },
+    [select, groups, setNodeGroup],
+  )
+
+  return { onNodesChange, onNodeDragStop }
+}
 
 /**
  * Bridges the zustand stores (source of truth) to React Flow's controlled
- * `nodes`/`edges` + change callbacks. Keeping this out of the component avoids
- * a giant render function and isolates the sync logic.
+ * `nodes`/`edges` + change callbacks.
  */
 export function useFlowSync() {
   const nodes = useNodesStore((s) => s.nodes)
   const selectedId = useNodesStore((s) => s.selectedId)
-  const setNodePosition = useNodesStore((s) => s.setNodePosition)
-  const removeNode = useNodesStore((s) => s.removeNode)
   const select = useNodesStore((s) => s.select)
   const monitors = useMonitorsStore((s) => s.monitors)
-  const setMonitorPosition = useMonitorsStore((s) => s.setMonitorPosition)
-  const removeMonitor = useMonitorsStore((s) => s.removeMonitor)
+  const groups = useGroupsStore((s) => s.groups)
   const connections = useConnectionsStore((s) => s.connections)
   const removeConnection = useConnectionsStore((s) => s.removeConnection)
   const connectNodes = useConnectNodes()
 
-  // Controlled selection — without `selected`, React Flow resets it on every
-  // node update (e.g. each keystroke), dropping the formula bar.
-  const rfNodes = useMemo<Node[]>(
-    () => [
-      ...nodes.map((n) => rfNode(n.id, 'formula', n.x, n.y, n.id === selectedId)),
-      ...monitors.map((m) => rfNode(m.id, 'monitor', m.x, m.y, m.id === selectedId)),
-    ],
-    [nodes, monitors, selectedId],
+  const rfNodes = useMemo(
+    () => buildRfNodes(groups, nodes, monitors, selectedId),
+    [groups, nodes, monitors, selectedId],
   )
-
-  const monitorIds = useMemo(() => new Set(monitors.map((m) => m.id)), [monitors])
 
   const rfEdges = useMemo<Edge[]>(
     () =>
       connections.map((c) => ({ id: c.id, source: c.sourceId, target: c.targetId, type: 'deletable' })),
     [connections],
-  )
-
-  const onNodesChange = useCallback<OnNodesChange>(
-    (changes) => {
-      for (const change of changes) {
-        if (change.type === 'position' && change.position) {
-          const move = monitorIds.has(change.id) ? setMonitorPosition : setNodePosition
-          move(change.id, change.position.x, change.position.y)
-        } else if (change.type === 'remove') {
-          if (monitorIds.has(change.id)) removeMonitor(change.id)
-          else removeNode(change.id)
-        }
-      }
-    },
-    [monitorIds, setMonitorPosition, setNodePosition, removeMonitor, removeNode],
   )
 
   const onEdgesChange = useCallback<OnEdgesChange>(
@@ -91,12 +170,9 @@ export function useFlowSync() {
     [connectNodes],
   )
 
-  // Drive selection directly from interactions (single click / drag end) so it
-  // never races with React Flow's internal selection under controlled `selected`.
-  // Selecting on drag *stop* (not start) avoids re-rendering mid-drag.
   const onNodeClick = useCallback<NodeMouseHandler>((_, node) => select(node.id), [select])
-  const onNodeDragStop = useCallback<OnNodeDrag>((_, node) => select(node.id), [select])
   const onPaneClick = useCallback(() => select(null), [select])
+  const { onNodesChange, onNodeDragStop } = useNodeChanges()
 
   return {
     rfNodes,

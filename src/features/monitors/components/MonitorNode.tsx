@@ -54,14 +54,18 @@ export function MonitorNode({ id, selected }: NodeProps) {
           <option value="">Select a node…</option>
           {nodes.map((n) => (
             <option key={n.id} value={n.id}>
-              {n.name}
+              {n.label?.trim() ? `${n.label} (${n.name})` : n.name}
             </option>
           ))}
         </select>
 
         <div className="rounded-lg bg-zinc-50 px-3 py-2 dark:bg-white/5">
           <MonitorValue hasTarget={!!target} error={result.error} value={result.value} />
-          {target && <div className="mt-0.5 text-xs text-zinc-400">{target.name}</div>}
+          {target && (
+            <div className="mt-0.5 text-xs text-zinc-400">
+              {target.label?.trim() ? `${target.label} · ${target.name}` : target.name}
+            </div>
+          )}
         </div>
       </div>
     </div>

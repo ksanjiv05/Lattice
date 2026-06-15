@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { persistStorage, storeKey } from '@/store/persist'
 import type { NodeModel } from '../types'
 
-type NodePatch = Partial<Pick<NodeModel, 'name' | 'expression'>>
+type NodePatch = Partial<Pick<NodeModel, 'name' | 'label' | 'expression'>>
 
 interface NodesState {
   nodes: NodeModel[]
@@ -27,7 +27,14 @@ export const useNodesStore = create<NodesState>()(
       addNode: (x, y) =>
         set((s) => {
           const seq = s.seq + 1
-          const node: NodeModel = { id: crypto.randomUUID(), name: `n${seq}`, expression: '0', x, y }
+          const node: NodeModel = {
+            id: crypto.randomUUID(),
+            name: `n${seq}`,
+            label: '',
+            expression: '0',
+            x,
+            y,
+          }
           return { nodes: [...s.nodes, node], seq, selectedId: node.id }
         }),
       updateNode: (id, patch) =>

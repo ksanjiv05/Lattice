@@ -1,5 +1,5 @@
 import { Handle, Position, useReactFlow, type NodeProps } from '@xyflow/react'
-import { GripVertical, X } from 'lucide-react'
+import { GripVertical, Hash, X } from 'lucide-react'
 import { Input, ResultBadge } from '@/components/ui'
 import { useCellResult } from '@/features/engine'
 import { cn } from '@/utils'
@@ -35,10 +35,11 @@ export function FormulaNode({ id, selected }: NodeProps) {
       <header className="node-drag-handle flex cursor-grab items-center gap-1 border-b border-zinc-100 px-2 py-1.5 active:cursor-grabbing dark:border-white/5">
         <GripVertical className="size-4 shrink-0 text-zinc-300 dark:text-zinc-600" />
         <input
-          aria-label="node name"
-          className="nodrag min-w-0 flex-1 bg-transparent text-sm font-semibold text-zinc-900 outline-none dark:text-zinc-100"
-          value={node.name}
-          onChange={(e) => updateNode(id, { name: e.target.value })}
+          aria-label="node label"
+          className="nodrag min-w-0 flex-1 bg-transparent text-sm font-semibold text-zinc-900 outline-none placeholder:font-normal placeholder:text-zinc-400 dark:text-zinc-100"
+          value={node.label ?? ''}
+          placeholder="Label"
+          onChange={(e) => updateNode(id, { label: e.target.value })}
         />
         <button
           className="nodrag flex size-6 shrink-0 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-500"
@@ -50,6 +51,16 @@ export function FormulaNode({ id, selected }: NodeProps) {
       </header>
 
       <div className="flex flex-col gap-2 px-2.5 py-2.5">
+        <div className="flex items-center gap-1.5 text-zinc-400">
+          <Hash className="size-3.5 shrink-0" />
+          <input
+            aria-label="node name"
+            title="Reference name used in formulas"
+            className="nodrag min-w-0 flex-1 bg-transparent font-mono text-xs text-zinc-600 outline-none dark:text-zinc-300"
+            value={node.name}
+            onChange={(e) => updateNode(id, { name: e.target.value })}
+          />
+        </div>
         <NodeInputs nodeId={id} />
         <Input
           aria-label="node formula"

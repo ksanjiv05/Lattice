@@ -34,7 +34,12 @@ export function FormulaNode({ id, selected }: NodeProps) {
       <Handle type="target" position={Position.Left} className={handleClass} />
       <Handle type="source" position={Position.Right} className={handleClass} />
 
-      <header className="node-drag-handle flex cursor-grab items-center gap-1 border-b border-zinc-100 px-2 py-1.5 active:cursor-grabbing dark:border-white/5">
+      {node.color && <div className="h-1.5 w-full" style={{ backgroundColor: node.color }} />}
+
+      <header
+        className="node-drag-handle flex cursor-grab items-center gap-1 border-b border-zinc-100 px-2 py-1.5 active:cursor-grabbing dark:border-white/5"
+        style={node.color ? { backgroundColor: `${node.color}14` } : undefined}
+      >
         <GripVertical className="size-4 shrink-0 text-zinc-300 dark:text-zinc-600" />
         <input
           aria-label="node label"

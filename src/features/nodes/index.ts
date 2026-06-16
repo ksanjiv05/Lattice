@@ -1,3 +1,5 @@
 export { FormulaNode } from './components/FormulaNode'
 export { useNodesStore } from './store/nodes.store'
+export { NODE_COLORS } from './colors'
+export type { NodeColor } from './colors'
 export type { NodeModel } from './types'

@@ -18,6 +18,8 @@ interface NodesState {
   select: (id: string | null) => void
   /** Assign (or clear) a weight applied to a node's output. */
   setNodeWeight: (id: string, weightId: string | null) => void
+  /** Set (or clear) a node's accent color. */
+  setNodeColor: (id: string, color: string | null) => void
   /** Assign (or clear) a node's group membership. */
   setNodeGroup: (id: string, groupId: string | null) => void
   /** Shift every member of a group by a delta (used when the group is dragged). */
@@ -44,6 +46,7 @@ export const useNodesStore = create<NodesState>()(
             y,
             groupId: null,
             weightId: null,
+            color: null,
           }
           return { nodes: [...s.nodes, node], seq, selectedId: node.id }
         }),
@@ -63,6 +66,8 @@ export const useNodesStore = create<NodesState>()(
       select: (id) => set({ selectedId: id }),
       setNodeWeight: (id, weightId) =>
         set((s) => ({ nodes: s.nodes.map((n) => (n.id === id ? { ...n, weightId } : n)) })),
+      setNodeColor: (id, color) =>
+        set((s) => ({ nodes: s.nodes.map((n) => (n.id === id ? { ...n, color } : n)) })),
       setNodeGroup: (id, groupId) =>
         set((s) => ({ nodes: s.nodes.map((n) => (n.id === id ? { ...n, groupId } : n)) })),
       moveMembersBy: (groupId, dx, dy) =>

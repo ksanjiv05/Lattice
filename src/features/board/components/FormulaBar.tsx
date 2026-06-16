@@ -5,6 +5,7 @@ import { useCellResult } from '@/features/engine'
 import { useNodesStore } from '@/features/nodes'
 import { FunctionsHelp } from './FunctionsHelp'
 import { NodeWeightSelect } from './NodeWeightSelect'
+import { NodeColorSelect } from './NodeColorSelect'
 
 const isDefaultExpr = (expr: string) => {
   const t = expr.trim()
@@ -82,6 +83,7 @@ export function FormulaBar() {
               <span>=</span>
               <ResultBadge result={result} />
             </div>
+            <NodeColorSelect nodeId={node.id} color={node.color} />
             <NodeWeightSelect nodeId={node.id} weightId={node.weightId} />
           </>
         ) : (

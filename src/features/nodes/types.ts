@@ -12,4 +12,6 @@ export interface NodeModel {
   groupId: string | null
   /** Id of a weight applied to this node's output, or null. */
   weightId: string | null
+  /** Accent color (hex) for visual identification, or null. */
+  color: string | null
 }

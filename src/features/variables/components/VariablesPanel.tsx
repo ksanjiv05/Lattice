@@ -1,35 +1,24 @@
-import { Plus, Variable, X } from 'lucide-react'
+import { Plus, Variable } from 'lucide-react'
 import { Button } from '@/components/ui'
-import { useSettingsStore } from '@/store'
 import { useVariablesStore } from '../store/variables.store'
 import { VariableRow } from './VariableRow'
 
-/** Side panel for creating and editing dynamic variables and their formulas. */
+/** Section for creating and editing dynamic variables and their formulas. */
 export function VariablesPanel() {
   const variables = useVariablesStore((s) => s.variables)
   const addVariable = useVariablesStore((s) => s.addVariable)
-  const closePanel = useSettingsStore((s) => s.toggleVariablesPanel)
 
   return (
-    <aside className="flex h-full w-90 flex-none flex-col gap-4 overflow-y-auto border-l border-zinc-200 bg-white p-4 dark:border-white/5 dark:bg-zinc-900">
+    <section className="flex flex-col gap-3">
       <header className="flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
           <Variable className="size-4 text-indigo-500" />
           Variables
         </h2>
-        <div className="flex items-center gap-1">
-          <Button onClick={addVariable}>
-            <Plus className="size-4" />
-            Variable
-          </Button>
-          <button
-            onClick={closePanel}
-            aria-label="close variables panel"
-            className="flex size-9 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-white/10 dark:hover:text-zinc-100"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
+        <Button onClick={addVariable}>
+          <Plus className="size-4" />
+          Variable
+        </Button>
       </header>
 
       {variables.length === 0 ? (
@@ -46,6 +35,6 @@ export function VariablesPanel() {
           ))}
         </div>
       )}
-    </aside>
+    </section>
   )
 }

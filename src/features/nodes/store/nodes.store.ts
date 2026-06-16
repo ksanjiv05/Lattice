@@ -16,6 +16,8 @@ interface NodesState {
   setNodePosition: (id: string, x: number, y: number) => void
   removeNode: (id: string) => void
   select: (id: string | null) => void
+  /** Assign (or clear) a weight applied to a node's output. */
+  setNodeWeight: (id: string, weightId: string | null) => void
   /** Assign (or clear) a node's group membership. */
   setNodeGroup: (id: string, groupId: string | null) => void
   /** Shift every member of a group by a delta (used when the group is dragged). */
@@ -41,6 +43,7 @@ export const useNodesStore = create<NodesState>()(
             x,
             y,
             groupId: null,
+            weightId: null,
           }
           return { nodes: [...s.nodes, node], seq, selectedId: node.id }
         }),
@@ -58,6 +61,8 @@ export const useNodesStore = create<NodesState>()(
           selectedId: s.selectedId === id ? null : s.selectedId,
         })),
       select: (id) => set({ selectedId: id }),
+      setNodeWeight: (id, weightId) =>
+        set((s) => ({ nodes: s.nodes.map((n) => (n.id === id ? { ...n, weightId } : n)) })),
       setNodeGroup: (id, groupId) =>
         set((s) => ({ nodes: s.nodes.map((n) => (n.id === id ? { ...n, groupId } : n)) })),
       moveMembersBy: (groupId, dx, dy) =>

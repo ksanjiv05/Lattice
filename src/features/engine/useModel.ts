@@ -4,6 +4,7 @@ import { useNodesStore } from '@/features/nodes'
 import { useVariablesStore } from '@/features/variables'
 import { useConnectionsStore } from '@/features/connections'
 import { useGroupsStore } from '@/features/groups'
+import { useWeightsStore } from '@/features/weights'
 import { buildModel } from './buildModel'
 
 const EMPTY: CellResult = { value: null, error: null }
@@ -17,10 +18,11 @@ export function useModel(): Record<string, CellResult> {
   const variables = useVariablesStore((s) => s.variables)
   const connections = useConnectionsStore((s) => s.connections)
   const groups = useGroupsStore((s) => s.groups)
+  const weights = useWeightsStore((s) => s.weights)
 
   const cells = useMemo(
-    () => buildModel(nodes, variables, connections, groups),
-    [nodes, variables, connections, groups],
+    () => buildModel(nodes, variables, connections, groups, weights),
+    [nodes, variables, connections, groups, weights],
   )
 
   return useMemo(() => evaluateModel(cells), [cells])

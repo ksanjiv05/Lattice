@@ -3,6 +3,7 @@ import type { NodeModel } from '@/features/nodes'
 import type { VariableModel } from '@/features/variables'
 import type { Connection } from '@/features/connections'
 import type { GroupModel } from '@/features/groups'
+import type { WeightModel } from '@/features/weights'
 
 /** name lookups for both nodes and groups (both are referenceable by name). */
 function indexNames(nodes: NodeModel[], groups: GroupModel[]): Map<string, string> {
@@ -62,13 +63,41 @@ function nodeCell(
   connections: Connection[],
   nameById: Map<string, string>,
   groupOfFirstChild: Map<string, string>,
+  weightNameById: Map<string, string>,
 ): Cell {
   const direct = inputsFor(connections, nameById, node.id, 0)
   const groupId = groupOfFirstChild.get(node.id)
   const inherited = groupId
     ? inputsFor(connections, nameById, groupId, Object.keys(direct).length)
     : {}
-  return { expression: node.expression, inputs: { ...direct, ...inherited } }
+  // An assigned weight multiplies the node's whole result (reducing it).
+  const weightName = node.weightId ? weightNameById.get(node.weightId) : undefined
+  const expression = weightName ? `(${node.expression.trim() || '0'}) * ${weightName}` : node.expression
+  return { expression, inputs: { ...direct, ...inherited } }
+}
+
+/** A group's value mirrors its last child (or 0 when empty). */
+function groupCells(
+  groups: GroupModel[],
+  childrenByGroup: Map<string, NodeModel[]>,
+): Record<string, Cell> {
+  const cells: Record<string, Cell> = {}
+  for (const g of groups) {
+    if (!g.name.trim()) continue
+    const last = (childrenByGroup.get(g.id) ?? []).at(-1)
+    cells[g.name] = { expression: last?.name.trim() ? last.name : '0' }
+  }
+  return cells
+}
+
+/** A weight resolves to `1 - (amount)` — the factor that, when multiplied,
+ * reduces an output by the assigned amount. */
+function weightCells(weights: WeightModel[]): Record<string, Cell> {
+  const cells: Record<string, Cell> = {}
+  for (const w of weights) {
+    if (w.name.trim()) cells[w.name] = { expression: `1 - (${w.expression.trim() || '0'})` }
+  }
+  return cells
 }
 
 /**
@@ -77,30 +106,35 @@ function nodeCell(
  * Groups behave like a single node from the outside:
  * - a group's value mirrors its **last** child (`g = lastChild`)
  * - a wire into a group feeds its **first** child as extra `inN` inputs
+ *
+ * Weights are variables that resolve to `1 - (expression)`, so multiplying an
+ * output by a weight reduces it by the assigned amount.
  */
 export function buildModel(
   nodes: NodeModel[],
   variables: VariableModel[],
   connections: Connection[],
   groups: GroupModel[],
+  weights: WeightModel[],
 ): Record<string, Cell> {
   const nameById = indexNames(nodes, groups)
   const childrenByGroup = indexChildren(nodes)
   const groupOfFirstChild = indexFirstChildren(groups, childrenByGroup)
+  const weightNameById = new Map(
+    weights.filter((w) => w.name.trim()).map((w) => [w.id, w.name]),
+  )
 
   const cells: Record<string, Cell> = {}
 
   for (const node of nodes) {
-    if (node.name.trim()) cells[node.name] = nodeCell(node, connections, nameById, groupOfFirstChild)
+    if (node.name.trim()) {
+      cells[node.name] = nodeCell(node, connections, nameById, groupOfFirstChild, weightNameById)
+    }
   }
   for (const v of variables) {
     if (v.name.trim()) cells[v.name] = { expression: v.expression }
   }
-  for (const g of groups) {
-    if (!g.name.trim()) continue
-    const last = (childrenByGroup.get(g.id) ?? []).at(-1)
-    cells[g.name] = { expression: last?.name.trim() ? last.name : '0' }
-  }
+  Object.assign(cells, groupCells(groups, childrenByGroup), weightCells(weights))
 
   return cells
 }

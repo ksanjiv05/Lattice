@@ -91,6 +91,10 @@ view: `Board` maps stores → RF `nodes`/`edges` and writes RF changes
   editing doesn't drag the node. Position/name/expression live in `nodes.store`.
 - **Variables** (`features/variables`) — named formulas in the side panel, not
   placed on the canvas.
+- **Weights** (`features/weights`) — special variables in the side panel that
+  resolve to `1 - (amount)`. Multiplying an output by a weight reduces it by the
+  assigned amount (weight `0.3` → factor `0.7` → `n1 * w1` cuts n1 by 30%). The
+  `1 - (...)` wrapping lives in `engine/buildModel.ts`.
 - **Groups** (`features/groups`) — dashed-border container nodes that wrap child
   nodes (membership via `node.groupId`, set by dropping a node inside). A group
   is referenceable like a node: its value mirrors its **last** child, and a wire

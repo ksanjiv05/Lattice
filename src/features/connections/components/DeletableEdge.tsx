@@ -1,16 +1,11 @@
 import { useState } from 'react'
-import {
-  BaseEdge,
-  EdgeLabelRenderer,
-  getBezierPath,
-  useReactFlow,
-  type EdgeProps,
-} from '@xyflow/react'
-import { X } from 'lucide-react'
+import { BaseEdge, getBezierPath, type EdgeProps } from '@xyflow/react'
+import { EdgeLabel } from './EdgeLabel'
 
 /**
- * Edge that reveals a delete button at its midpoint on hover or when selected.
- * Clicking it removes the wire (which syncs back to the connections store).
+ * Edge with an editable value-transform expression (`x` = source value). The
+ * expression shows as a chip on the wire and becomes editable when selected;
+ * a delete button appears on hover/selection.
  */
 export function DeletableEdge({
   id,
@@ -23,7 +18,6 @@ export function DeletableEdge({
   markerEnd,
   selected,
 }: EdgeProps) {
-  const { deleteElements } = useReactFlow()
   const [hovered, setHovered] = useState(false)
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -33,7 +27,6 @@ export function DeletableEdge({
     targetY,
     targetPosition,
   })
-
   const active = hovered || selected
 
   return (
@@ -44,7 +37,6 @@ export function DeletableEdge({
         markerEnd={markerEnd}
         style={{ stroke: active ? '#818cf8' : '#6366f1', strokeWidth: active ? 2.5 : 2 }}
       />
-      {/* Invisible wide path to make the wire easy to hover/click. */}
       <path
         d={edgePath}
         fill="none"
@@ -54,23 +46,14 @@ export function DeletableEdge({
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       />
-      {active && (
-        <EdgeLabelRenderer>
-          <button
-            className="nodrag nopan pointer-events-auto absolute flex size-5 items-center justify-center rounded-full border border-zinc-300 bg-white text-red-500 shadow-sm hover:bg-red-500/15 dark:border-zinc-600 dark:bg-zinc-800"
-            style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
-            aria-label="delete connection"
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            onClick={(e) => {
-              e.stopPropagation()
-              deleteElements({ edges: [{ id }] })
-            }}
-          >
-            <X className="size-3" />
-          </button>
-        </EdgeLabelRenderer>
-      )}
+      <EdgeLabel
+        id={id}
+        labelX={labelX}
+        labelY={labelY}
+        selected={!!selected}
+        hovered={hovered}
+        setHovered={setHovered}
+      />
     </>
   )
 }

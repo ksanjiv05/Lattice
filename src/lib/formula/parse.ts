@@ -15,7 +15,19 @@ type OpItem =
   | { kind: 'fn'; name: string }
   | { kind: 'lparen' }
 
-const PREC: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2, '^': 4 }
+const PREC: Record<string, number> = {
+  '==': 0,
+  '!=': 0,
+  '<': 0,
+  '>': 0,
+  '<=': 0,
+  '>=': 0,
+  '+': 1,
+  '-': 1,
+  '*': 2,
+  '/': 2,
+  '^': 4,
+}
 const PREC_NEG = 3
 const RIGHT_ASSOC = new Set(['^'])
 

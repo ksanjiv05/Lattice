@@ -101,10 +101,12 @@ view: `Board` maps stores → RF `nodes`/`edges` and writes RF changes
   into the group feeds its **first** child as extra `inN` inputs. Dragging a
   group moves its members. The model wiring lives in `engine/buildModel.ts`.
 - **Connections** (`features/connections`) — edges as data (`sourceId →
-  targetId`) in `connections.store`. Drag from a node's right handle to another
-  node to connect; select a wire and press Delete to remove it. The Nth incoming
-  wire is exposed to the target's formula as `inN` (carrying the source's
-  value), so a node can consume upstream outputs generically (e.g. `in1 + in2`).
+  targetId`, plus an `expression`) in `connections.store`. Drag from a node's
+  right handle to another node to connect; click a wire to edit its transform
+  expression (`x` = source value, e.g. `x * 2`, `if(x > 10, x, 0)`), hover to
+  delete. The Nth incoming wire is exposed to the target's formula as `inN`
+  carrying the (possibly transformed) value. A transforming wire becomes a
+  synthetic `__edge_<id>` cell in `engine/buildModel.ts`.
 - **Engine** (`lib/formula` + `features/engine`) — `lib/formula` is a pure
   tokenize → shunting-yard parse → RPN evaluate pipeline with built-in
   functions and **no `eval`**. `evaluateModel(symbols)` resolves the whole

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type {
   Edge,
   Node,
@@ -144,6 +144,7 @@ export function useFlowSync() {
   const connections = useConnectionsStore((s) => s.connections)
   const removeConnection = useConnectionsStore((s) => s.removeConnection)
   const connectNodes = useConnectNodes()
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
 
   const rfNodes = useMemo(
     () => buildRfNodes(groups, nodes, monitors, selectedId),
@@ -152,13 +153,22 @@ export function useFlowSync() {
 
   const rfEdges = useMemo<Edge[]>(
     () =>
-      connections.map((c) => ({ id: c.id, source: c.sourceId, target: c.targetId, type: 'deletable' })),
-    [connections],
+      connections.map((c) => ({
+        id: c.id,
+        source: c.sourceId,
+        target: c.targetId,
+        type: 'deletable',
+        selected: c.id === selectedEdgeId,
+      })),
+    [connections, selectedEdgeId],
   )
 
   const onEdgesChange = useCallback<OnEdgesChange>(
     (changes) => {
-      for (const change of changes) if (change.type === 'remove') removeConnection(change.id)
+      for (const change of changes) {
+        if (change.type === 'remove') removeConnection(change.id)
+        else if (change.type === 'select') setSelectedEdgeId(change.selected ? change.id : null)
+      }
     },
     [removeConnection],
   )
@@ -171,7 +181,10 @@ export function useFlowSync() {
   )
 
   const onNodeClick = useCallback<NodeMouseHandler>((_, node) => select(node.id), [select])
-  const onPaneClick = useCallback(() => select(null), [select])
+  const onPaneClick = useCallback(() => {
+    select(null)
+    setSelectedEdgeId(null)
+  }, [select])
   const { onNodesChange, onNodeDragStop } = useNodeChanges()
 
   return {

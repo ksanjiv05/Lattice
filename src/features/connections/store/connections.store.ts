@@ -7,6 +7,8 @@ interface ConnectionsState {
   connections: Connection[]
   /** Add a wire source → target; ignores self-links and duplicates. */
   addConnection: (sourceId: string, targetId: string) => void
+  /** Set the wire's value-transform expression (`x` = source value). */
+  setConnectionExpression: (id: string, expression: string) => void
   removeConnection: (id: string) => void
 }
 
@@ -20,9 +22,13 @@ export const useConnectionsStore = create<ConnectionsState>()(
             (c) => c.sourceId === sourceId && c.targetId === targetId,
           )
           if (sourceId === targetId || exists) return {}
-          const connection: Connection = { id: crypto.randomUUID(), sourceId, targetId }
+          const connection: Connection = { id: crypto.randomUUID(), sourceId, targetId, expression: '' }
           return { connections: [...s.connections, connection] }
         }),
+      setConnectionExpression: (id, expression) =>
+        set((s) => ({
+          connections: s.connections.map((c) => (c.id === id ? { ...c, expression } : c)),
+        })),
       removeConnection: (id) =>
         set((s) => ({ connections: s.connections.filter((c) => c.id !== id) })),
     }),

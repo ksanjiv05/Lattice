@@ -25,10 +25,38 @@ function indexChildren(nodes: NodeModel[]): Map<string, NodeModel[]> {
   return map
 }
 
+const PASS_THROUGH = new Set(['', 'x'])
+
+/**
+ * A symbol carrying each wire's flowing value. A pass-through wire (empty or
+ * `x`) reuses the source's name; a transforming wire (`x * 2`, `if(x>10,x,0)`)
+ * gets a synthetic cell that evaluates the expression with `x` = source value.
+ */
+function buildEdgeCells(
+  connections: Connection[],
+  nameById: Map<string, string>,
+): { edgeCells: Record<string, Cell>; valueByConn: Map<string, string> } {
+  const edgeCells: Record<string, Cell> = {}
+  const valueByConn = new Map<string, string>()
+  for (const c of connections) {
+    const sourceName = nameById.get(c.sourceId)
+    if (!sourceName) continue
+    const expr = (c.expression ?? '').trim()
+    if (PASS_THROUGH.has(expr)) {
+      valueByConn.set(c.id, sourceName)
+    } else {
+      const key = `__edge_${c.id}`
+      edgeCells[key] = { expression: expr, inputs: { x: sourceName } }
+      valueByConn.set(c.id, key)
+    }
+  }
+  return { edgeCells, valueByConn }
+}
+
 /** Incoming wires for `targetId` as `inN` inputs, numbered from `start`. */
 function inputsFor(
   connections: Connection[],
-  nameById: Map<string, string>,
+  valueByConn: Map<string, string>,
   targetId: string,
   start: number,
 ): Record<string, string> {
@@ -36,10 +64,10 @@ function inputsFor(
   let index = start
   for (const c of connections) {
     if (c.targetId !== targetId) continue
-    const sourceName = nameById.get(c.sourceId)
-    if (!sourceName) continue
+    const valueName = valueByConn.get(c.id)
+    if (!valueName) continue
     index += 1
-    inputs[`in${index}`] = sourceName
+    inputs[`in${index}`] = valueName
   }
   return inputs
 }
@@ -61,14 +89,14 @@ function indexFirstChildren(
 function nodeCell(
   node: NodeModel,
   connections: Connection[],
-  nameById: Map<string, string>,
+  valueByConn: Map<string, string>,
   groupOfFirstChild: Map<string, string>,
   weightNameById: Map<string, string>,
 ): Cell {
-  const direct = inputsFor(connections, nameById, node.id, 0)
+  const direct = inputsFor(connections, valueByConn, node.id, 0)
   const groupId = groupOfFirstChild.get(node.id)
   const inherited = groupId
-    ? inputsFor(connections, nameById, groupId, Object.keys(direct).length)
+    ? inputsFor(connections, valueByConn, groupId, Object.keys(direct).length)
     : {}
   // An assigned weight multiplies the node's whole result (reducing it).
   const weightName = node.weightId ? weightNameById.get(node.weightId) : undefined
@@ -123,12 +151,13 @@ export function buildModel(
   const weightNameById = new Map(
     weights.filter((w) => w.name.trim()).map((w) => [w.id, w.name]),
   )
+  const { edgeCells, valueByConn } = buildEdgeCells(connections, nameById)
 
-  const cells: Record<string, Cell> = {}
+  const cells: Record<string, Cell> = { ...edgeCells }
 
   for (const node of nodes) {
     if (node.name.trim()) {
-      cells[node.name] = nodeCell(node, connections, nameById, groupOfFirstChild, weightNameById)
+      cells[node.name] = nodeCell(node, connections, valueByConn, groupOfFirstChild, weightNameById)
     }
   }
   for (const v of variables) {

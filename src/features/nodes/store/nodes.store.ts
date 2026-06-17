@@ -9,13 +9,20 @@ interface NodesState {
   nodes: NodeModel[]
   /** Monotonic counter for default naming (avoids id/name collisions). */
   seq: number
-  /** The node currently selected on the canvas (drives the formula bar). */
-  selectedId: string | null
+  /** Ids selected on the canvas (single drives the formula bar; multi for ops). */
+  selectedIds: string[]
   addNode: (x: number, y: number) => void
+  /** Append fully-formed nodes (used by paste) and select them. */
+  appendNodes: (nodes: NodeModel[]) => void
   updateNode: (id: string, patch: NodePatch) => void
   setNodePosition: (id: string, x: number, y: number) => void
   removeNode: (id: string) => void
+  /** Select a single node (or clear with null). */
   select: (id: string | null) => void
+  /** Add/remove a node from the current selection. */
+  toggleSelect: (id: string) => void
+  /** Replace the whole selection. */
+  setSelection: (ids: string[]) => void
   /** Assign (or clear) a weight applied to a node's output. */
   setNodeWeight: (id: string, weightId: string | null) => void
   /** Set (or clear) a node's accent color. */
@@ -33,7 +40,7 @@ export const useNodesStore = create<NodesState>()(
     (set) => ({
       nodes: [],
       seq: 0,
-      selectedId: null,
+      selectedIds: [],
       addNode: (x, y) =>
         set((s) => {
           const seq = s.seq + 1
@@ -48,8 +55,14 @@ export const useNodesStore = create<NodesState>()(
             weightId: null,
             color: null,
           }
-          return { nodes: [...s.nodes, node], seq, selectedId: node.id }
+          return { nodes: [...s.nodes, node], seq, selectedIds: [node.id] }
         }),
+      appendNodes: (added) =>
+        set((s) => ({
+          nodes: [...s.nodes, ...added],
+          seq: s.seq + added.length,
+          selectedIds: added.map((n) => n.id),
+        })),
       updateNode: (id, patch) =>
         set((s) => ({
           nodes: s.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n)),
@@ -61,9 +74,16 @@ export const useNodesStore = create<NodesState>()(
       removeNode: (id) =>
         set((s) => ({
           nodes: s.nodes.filter((n) => n.id !== id),
-          selectedId: s.selectedId === id ? null : s.selectedId,
+          selectedIds: s.selectedIds.filter((sid) => sid !== id),
         })),
-      select: (id) => set({ selectedId: id }),
+      select: (id) => set({ selectedIds: id ? [id] : [] }),
+      toggleSelect: (id) =>
+        set((s) => ({
+          selectedIds: s.selectedIds.includes(id)
+            ? s.selectedIds.filter((sid) => sid !== id)
+            : [...s.selectedIds, id],
+        })),
+      setSelection: (ids) => set({ selectedIds: ids }),
       setNodeWeight: (id, weightId) =>
         set((s) => ({ nodes: s.nodes.map((n) => (n.id === id ? { ...n, weightId } : n)) })),
       setNodeColor: (id, color) =>

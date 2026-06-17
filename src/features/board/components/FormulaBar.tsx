@@ -17,7 +17,9 @@ const isDefaultExpr = (expr: string) => {
  * in a roomy, single-row editor. Syncs with the node's inline field via the store.
  */
 export function FormulaBar() {
-  const node = useNodesStore((s) => s.nodes.find((n) => n.id === s.selectedId) ?? null)
+  const node = useNodesStore((s) =>
+    s.selectedIds.length === 1 ? (s.nodes.find((n) => n.id === s.selectedIds[0]) ?? null) : null,
+  )
   const updateNode = useNodesStore((s) => s.updateNode)
   const result = useCellResult(node?.name ?? '')
 

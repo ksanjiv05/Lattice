@@ -22,15 +22,16 @@ function buildRfNodes(
   groups: GroupModel[],
   nodes: NodeModel[],
   monitors: MonitorModel[],
-  selectedId: string | null,
+  selectedIds: string[],
 ): Node[] {
+  const isSelected = new Set(selectedIds)
   const groupNodes: Node[] = groups.map((g) => ({
     id: g.id,
     type: 'container',
     position: { x: g.x, y: g.y },
     style: { width: g.width, height: g.height },
     data: EMPTY_DATA,
-    selected: g.id === selectedId,
+    selected: isSelected.has(g.id),
     zIndex: 0,
   }))
   const make = (id: string, type: string, x: number, y: number): Node => ({
@@ -38,7 +39,7 @@ function buildRfNodes(
     type,
     position: { x, y },
     data: EMPTY_DATA,
-    selected: id === selectedId,
+    selected: isSelected.has(id),
     dragHandle: '.node-drag-handle',
     zIndex: 1,
   })
@@ -116,7 +117,8 @@ function useNodeChanges() {
   // On drop: select, and join/leave a group based on the node's center.
   const onNodeDragStop = useCallback<OnNodeDrag>(
     (_, node) => {
-      select(node.id)
+      // Keep a multi-selection intact when dragging one of its members.
+      if (!useNodesStore.getState().selectedIds.includes(node.id)) select(node.id)
       if (node.type !== 'formula') return
       const cx = node.position.x + (node.measured?.width ?? APPROX_NODE.w) / 2
       const cy = node.position.y + (node.measured?.height ?? APPROX_NODE.h) / 2
@@ -137,8 +139,9 @@ function useNodeChanges() {
  */
 export function useFlowSync() {
   const nodes = useNodesStore((s) => s.nodes)
-  const selectedId = useNodesStore((s) => s.selectedId)
+  const selectedIds = useNodesStore((s) => s.selectedIds)
   const select = useNodesStore((s) => s.select)
+  const toggleSelect = useNodesStore((s) => s.toggleSelect)
   const monitors = useMonitorsStore((s) => s.monitors)
   const groups = useGroupsStore((s) => s.groups)
   const connections = useConnectionsStore((s) => s.connections)
@@ -147,8 +150,8 @@ export function useFlowSync() {
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
 
   const rfNodes = useMemo(
-    () => buildRfNodes(groups, nodes, monitors, selectedId),
-    [groups, nodes, monitors, selectedId],
+    () => buildRfNodes(groups, nodes, monitors, selectedIds),
+    [groups, nodes, monitors, selectedIds],
   )
 
   const rfEdges = useMemo<Edge[]>(
@@ -180,7 +183,10 @@ export function useFlowSync() {
     [connectNodes],
   )
 
-  const onNodeClick = useCallback<NodeMouseHandler>((_, node) => select(node.id), [select])
+  const onNodeClick = useCallback<NodeMouseHandler>(
+    (e, node) => (e.shiftKey ? toggleSelect(node.id) : select(node.id)),
+    [select, toggleSelect],
+  )
   const onPaneClick = useCallback(() => {
     select(null)
     setSelectedEdgeId(null)

@@ -15,8 +15,8 @@ export function AddGroupButton() {
   const { screenToFlowPosition } = useReactFlow()
 
   const handleAdd = () => {
-    const { nodes, selectedId } = useNodesStore.getState()
-    const selected = nodes.find((n) => n.id === selectedId)
+    const { nodes, selectedIds } = useNodesStore.getState()
+    const selected = nodes.find((n) => n.id === selectedIds[0])
 
     if (selected) {
       const id = addGroup(selected.x - PAD, selected.y - PAD - 36, DEFAULT_SIZE.w, DEFAULT_SIZE.h)

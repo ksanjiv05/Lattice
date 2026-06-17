@@ -14,6 +14,7 @@ import { GroupNode } from '@/features/groups'
 import { DeletableEdge } from '@/features/connections'
 import { useSettingsStore } from '@/store'
 import { useFlowSync } from '../hooks/useFlowSync'
+import { useCopyPaste } from '../hooks/useCopyPaste'
 import { AddNodeButton } from './AddNodeButton'
 import { AddMonitorButton } from './AddMonitorButton'
 import { AddGroupButton } from './AddGroupButton'
@@ -24,6 +25,7 @@ const edgeTypes = { deletable: DeletableEdge }
 
 function BoardCanvas() {
   const theme = useSettingsStore((s) => s.theme)
+  useCopyPaste()
   const {
     rfNodes,
     rfEdges,
@@ -49,6 +51,8 @@ function BoardCanvas() {
       onNodeDragStop={onNodeDragStop}
       onPaneClick={onPaneClick}
       selectNodesOnDrag={false}
+      selectionKeyCode={null}
+      multiSelectionKeyCode={null}
       deleteKeyCode={['Delete', 'Backspace']}
       fitView
       fitViewOptions={{ padding: 0.3 }}

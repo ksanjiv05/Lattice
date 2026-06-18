@@ -91,11 +91,22 @@ view: `Board` maps stores → RF `nodes`/`edges` and writes RF changes
   editing doesn't drag the node. Position/name/expression live in `nodes.store`.
 - **Variables** (`features/variables`) — named formulas in the side panel, not
   placed on the canvas.
+- **Weights** (`features/weights`) — special variables in the side panel that
+  resolve to `1 - (amount)`. Multiplying an output by a weight reduces it by the
+  assigned amount (weight `0.3` → factor `0.7` → `n1 * w1` cuts n1 by 30%). The
+  `1 - (...)` wrapping lives in `engine/buildModel.ts`.
+- **Groups** (`features/groups`) — dashed-border container nodes that wrap child
+  nodes (membership via `node.groupId`, set by dropping a node inside). A group
+  is referenceable like a node: its value mirrors its **last** child, and a wire
+  into the group feeds its **first** child as extra `inN` inputs. Dragging a
+  group moves its members. The model wiring lives in `engine/buildModel.ts`.
 - **Connections** (`features/connections`) — edges as data (`sourceId →
-  targetId`) in `connections.store`. Drag from a node's right handle to another
-  node to connect; select a wire and press Delete to remove it. The Nth incoming
-  wire is exposed to the target's formula as `inN` (carrying the source's
-  value), so a node can consume upstream outputs generically (e.g. `in1 + in2`).
+  targetId`, plus an `expression`) in `connections.store`. Drag from a node's
+  right handle to another node to connect; click a wire to edit its transform
+  expression (`x` = source value, e.g. `x * 2`, `if(x > 10, x, 0)`), hover to
+  delete. The Nth incoming wire is exposed to the target's formula as `inN`
+  carrying the (possibly transformed) value. A transforming wire becomes a
+  synthetic `__edge_<id>` cell in `engine/buildModel.ts`.
 - **Engine** (`lib/formula` + `features/engine`) — `lib/formula` is a pure
   tokenize → shunting-yard parse → RPN evaluate pipeline with built-in
   functions and **no `eval`**. `evaluateModel(symbols)` resolves the whole

@@ -10,18 +10,22 @@ import {
 import '@xyflow/react/dist/style.css'
 import { FormulaNode } from '@/features/nodes'
 import { MonitorNode } from '@/features/monitors'
+import { GroupNode } from '@/features/groups'
 import { DeletableEdge } from '@/features/connections'
 import { useSettingsStore } from '@/store'
 import { useFlowSync } from '../hooks/useFlowSync'
+import { useCopyPaste } from '../hooks/useCopyPaste'
 import { AddNodeButton } from './AddNodeButton'
 import { AddMonitorButton } from './AddMonitorButton'
+import { AddGroupButton } from './AddGroupButton'
 import { FormulaBar } from './FormulaBar'
 
-const nodeTypes = { formula: FormulaNode, monitor: MonitorNode }
+const nodeTypes = { formula: FormulaNode, monitor: MonitorNode, container: GroupNode }
 const edgeTypes = { deletable: DeletableEdge }
 
 function BoardCanvas() {
   const theme = useSettingsStore((s) => s.theme)
+  useCopyPaste()
   const {
     rfNodes,
     rfEdges,
@@ -47,6 +51,8 @@ function BoardCanvas() {
       onNodeDragStop={onNodeDragStop}
       onPaneClick={onPaneClick}
       selectNodesOnDrag={false}
+      selectionKeyCode={null}
+      multiSelectionKeyCode={null}
       deleteKeyCode={['Delete', 'Backspace']}
       fitView
       fitViewOptions={{ padding: 0.3 }}
@@ -59,6 +65,7 @@ function BoardCanvas() {
         <div className="flex gap-2">
           <AddNodeButton />
           <AddMonitorButton />
+          <AddGroupButton />
         </div>
       </Panel>
     </ReactFlow>

@@ -54,6 +54,17 @@ export const FUNCTIONS: Record<string, FormulaFn> = {
   sin: { arity: 1, apply: ([a]) => Math.sin(a), signature: 'sin(x)', description: 'Sine (radians)' },
   cos: { arity: 1, apply: ([a]) => Math.cos(a), signature: 'cos(x)', description: 'Cosine (radians)' },
   tan: { arity: 1, apply: ([a]) => Math.tan(a), signature: 'tan(x)', description: 'Tangent (radians)' },
+
+  // Conditional (use with > < >= <= == != ; true is any non-zero value)
+  if: {
+    arity: 3,
+    apply: ([c, a, b]) => (c !== 0 ? a : b),
+    signature: 'if(cond, a, b)',
+    description: 'a when cond is true (≠0), else b',
+  },
+  and: { arity: 2, apply: ([a, b]) => (a !== 0 && b !== 0 ? 1 : 0), signature: 'and(a, b)', description: 'Logical AND → 1/0' },
+  or: { arity: 2, apply: ([a, b]) => (a !== 0 || b !== 0 ? 1 : 0), signature: 'or(a, b)', description: 'Logical OR → 1/0' },
+  not: { arity: 1, apply: ([a]) => (a === 0 ? 1 : 0), signature: 'not(x)', description: 'Logical NOT → 1/0' },
 }
 
 export function errorMessage(error: unknown): string {

@@ -4,6 +4,8 @@ import { Input, ResultBadge } from '@/components/ui'
 import { useCellResult } from '@/features/engine'
 import { useNodesStore } from '@/features/nodes'
 import { FunctionsHelp } from './FunctionsHelp'
+import { NodeWeightSelect } from './NodeWeightSelect'
+import { NodeColorSelect } from './NodeColorSelect'
 
 const isDefaultExpr = (expr: string) => {
   const t = expr.trim()
@@ -15,7 +17,9 @@ const isDefaultExpr = (expr: string) => {
  * in a roomy, single-row editor. Syncs with the node's inline field via the store.
  */
 export function FormulaBar() {
-  const node = useNodesStore((s) => s.nodes.find((n) => n.id === s.selectedId) ?? null)
+  const node = useNodesStore((s) =>
+    s.selectedIds.length === 1 ? (s.nodes.find((n) => n.id === s.selectedIds[0]) ?? null) : null,
+  )
   const updateNode = useNodesStore((s) => s.updateNode)
   const result = useCellResult(node?.name ?? '')
 
@@ -81,6 +85,8 @@ export function FormulaBar() {
               <span>=</span>
               <ResultBadge result={result} />
             </div>
+            <NodeColorSelect nodeId={node.id} color={node.color} />
+            <NodeWeightSelect nodeId={node.id} weightId={node.weightId} />
           </>
         ) : (
           <span className="text-sm text-zinc-500 dark:text-zinc-400">

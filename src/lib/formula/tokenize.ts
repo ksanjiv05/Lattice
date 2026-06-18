@@ -33,6 +33,17 @@ export function tokenize(input: string): Token[] {
       let raw = ''
       while (i < input.length && isIdentPart(input[i])) raw += input[i++]
       tokens.push({ type: 'id', value: raw })
+    } else if (ch === '<' || ch === '>' || ch === '=' || ch === '!') {
+      const two = input.slice(i, i + 2)
+      if (two === '<=' || two === '>=' || two === '==' || two === '!=') {
+        tokens.push({ type: 'op', value: two })
+        i += 2
+      } else if (ch === '<' || ch === '>') {
+        tokens.push({ type: 'op', value: ch })
+        i++
+      } else {
+        throw new FormulaError(`Unexpected character "${ch}" (use ==, !=, <=, >=)`)
+      }
     } else if (OP_CHARS.includes(ch)) {
       tokens.push({ type: 'op', value: ch })
       i++

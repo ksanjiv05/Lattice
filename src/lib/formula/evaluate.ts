@@ -13,6 +13,18 @@ function applyOp(op: string, a: number, b: number): number {
       return a / b
     case '^':
       return a ** b
+    case '>':
+      return a > b ? 1 : 0
+    case '<':
+      return a < b ? 1 : 0
+    case '>=':
+      return a >= b ? 1 : 0
+    case '<=':
+      return a <= b ? 1 : 0
+    case '==':
+      return a === b ? 1 : 0
+    case '!=':
+      return a !== b ? 1 : 0
     default:
       throw new FormulaError(`Unknown operator "${op}"`)
   }

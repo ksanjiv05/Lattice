@@ -1,7 +1,8 @@
 import { Handle, Position, useReactFlow, type NodeProps } from '@xyflow/react'
-import { GripVertical, Hash, X } from 'lucide-react'
+import { GripVertical, Hash, Scale, X } from 'lucide-react'
 import { Input, ResultBadge } from '@/components/ui'
 import { useCellResult } from '@/features/engine'
+import { useWeightsStore } from '@/features/weights'
 import { cn } from '@/utils'
 import { useNodesStore } from '../store/nodes.store'
 import { NodeInputs } from './NodeInputs'
@@ -17,6 +18,7 @@ const handleClass =
 export function FormulaNode({ id, selected }: NodeProps) {
   const node = useNodesStore((s) => s.nodes.find((n) => n.id === id))
   const updateNode = useNodesStore((s) => s.updateNode)
+  const weightName = useWeightsStore((s) => s.weights.find((w) => w.id === node?.weightId)?.name)
   const { deleteElements } = useReactFlow()
   const result = useCellResult(node?.name ?? '')
 
@@ -32,7 +34,12 @@ export function FormulaNode({ id, selected }: NodeProps) {
       <Handle type="target" position={Position.Left} className={handleClass} />
       <Handle type="source" position={Position.Right} className={handleClass} />
 
-      <header className="node-drag-handle flex cursor-grab items-center gap-1 border-b border-zinc-100 px-2 py-1.5 active:cursor-grabbing dark:border-white/5">
+      {node.color && <div className="h-1.5 w-full" style={{ backgroundColor: node.color }} />}
+
+      <header
+        className="node-drag-handle flex cursor-grab items-center gap-1 border-b border-zinc-100 px-2 py-1.5 active:cursor-grabbing dark:border-white/5"
+        style={node.color ? { backgroundColor: `${node.color}14` } : undefined}
+      >
         <GripVertical className="size-4 shrink-0 text-zinc-300 dark:text-zinc-600" />
         <input
           aria-label="node label"
@@ -71,7 +78,18 @@ export function FormulaNode({ id, selected }: NodeProps) {
         />
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-medium uppercase tracking-wide text-zinc-400">Result</span>
-          <ResultBadge result={result} />
+          <div className="flex items-center gap-1.5">
+            {weightName && (
+              <span
+                className="inline-flex items-center gap-0.5 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400"
+                title="Weight applied to this node"
+              >
+                <Scale className="size-2.5" />
+                {weightName}
+              </span>
+            )}
+            <ResultBadge result={result} />
+          </div>
         </div>
       </div>
     </div>

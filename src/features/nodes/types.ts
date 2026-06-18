@@ -8,4 +8,10 @@ export interface NodeModel {
   expression: string
   x: number
   y: number
+  /** Id of the group this node belongs to, or null if ungrouped. */
+  groupId: string | null
+  /** Id of a weight applied to this node's output, or null. */
+  weightId: string | null
+  /** Accent color (hex) for visual identification, or null. */
+  color: string | null
 }
